@@ -7,7 +7,6 @@ namespace HumanResources.Testing
     [TestClass]
     public class HourlyEmployeeTests
     {
-
         /*
         * HourlyEmployee() Constructor
         */
@@ -30,7 +29,6 @@ namespace HumanResources.Testing
             Assert.AreEqual("The argument must contain at least one non-whitespace character.", GetExceptionMessage(exception.Message));
         }
 
-
         [TestMethod]
         public void Constructor_HoursWorkedLessThanZero_ThrowsArgumentOutOfRangeException()
         {
@@ -41,7 +39,7 @@ namespace HumanResources.Testing
             //Act
             ArgumentOutOfRangeException exception =
                 Assert.ThrowsException<ArgumentOutOfRangeException>(
-                    () => new HourlyEmployee("Malcolm", hoursWorked, 27)                     
+                    () => new HourlyEmployee("Malcolm", hoursWorked, 27)
                 );
 
 
@@ -49,7 +47,6 @@ namespace HumanResources.Testing
             Assert.AreEqual("hoursWorked", exception.ParamName);
             Assert.AreEqual("The argument value must between zero and 100 (inclusive).", GetExceptionMessage(exception.Message));
         }
-
 
         [TestMethod]
         public void Constructor_HoursWorkedGreaterThanOneHundred_ThrowsArgumentOutOfRangeException()
@@ -67,7 +64,6 @@ namespace HumanResources.Testing
             Assert.AreEqual("hoursWorked", exception.ParamName);
             Assert.AreEqual("The argument value must between zero and 100 (inclusive).", GetExceptionMessage(exception.Message));
         }
-
 
         [TestMethod]
         public void Constructor_RateOfPayLessThanZero_ThrowsArgumentOutOfRangeException()
@@ -98,17 +94,96 @@ namespace HumanResources.Testing
             //Act
             HourlyEmployee testEmployee = new HourlyEmployee(name, hoursWorked, rateOfPay);
 
-            PrivateObject target = new PrivateObject(testEmployee, new PrivateType(typeof(HourlyEmployee)));
-
-            
             //Assert
-            string actual = (string)target.GetField("name");
-            double actual = (double)target.GetField("hoursWorked");
+            PrivateObject target;
 
+            target = new PrivateObject(testEmployee);
 
+            double actualHoursWorked = (double)target.GetField("hoursWorked");
+            decimal actualRateOfPay = (decimal)target.GetField("rateOfPay");
+
+            PrivateType privateType;
+
+            privateType = new PrivateType(typeof(Employee));
+
+            target = new PrivateObject(testEmployee, privateType);
+
+            string actualName = (string)target.GetField("name");
+
+            Assert.AreEqual(name, actualName);
+            Assert.AreEqual(hoursWorked,actualHoursWorked);
+            Assert.AreEqual(rateOfPay, actualRateOfPay);
 
         }
-        
+
+        /*
+        * Name Property tests
+        */
+
+        [TestMethod]
+        public void SetName_NoNonWhitespaceCharacters_ThrowsArgumentException()
+        {
+            //Arrange
+            string employeeName = "Peter";
+            HourlyEmployee testEmployee = new HourlyEmployee(employeeName, 40, 40);
+
+            //Act
+            ArgumentException exception =
+                Assert.ThrowsException<ArgumentException>(
+                    () => testEmployee.Name = " "
+                );
+
+            //Assert
+            Assert.AreEqual("value", exception.ParamName);
+            Assert.AreEqual("The value must contain at least one non-whitespace character.",
+                GetExceptionMessage(exception.Message));
+
+            //Ensure state has not changed
+            PrivateObject target = new PrivateObject(testEmployee, new PrivateType(typeof(Employee)));
+            string actual = (string)target.GetField("name");
+            Assert.AreEqual(employeeName, actual);
+        }
+
+        [TestMethod]
+        public void SetRateOfPay_ValueLessThanZero_ThrowsArgumentOutOfRangeException()
+        {
+            //Arrange
+            HourlyEmployee testEmployee = new HourlyEmployee("Michael", 40, 40);
+
+            //Act
+            ArgumentOutOfRangeException exception =
+            Assert.ThrowsException<ArgumentOutOfRangeException>(
+                () => testEmployee.RateOfPay = -10m
+                );
+
+            //Assert
+            Assert.AreEqual("value", exception.ParamName);
+            Assert.AreEqual("The value must be zero or greater.", GetExceptionMessage(exception.Message));
+        }
+
+        [TestMethod]
+        public void SetRateOfPay_ValidValue_ChangeState()
+        {
+            // Arrange
+            decimal rateOfPay = 10;
+
+            HourlyEmployee testEmployee = new HourlyEmployee("Alpha", 90, 100);
+
+            rateOfPay = 20;
+
+            // Act
+            testEmployee.RateOfPay = rateOfPay;
+
+            // Assert
+            PrivateObject target =
+                new PrivateObject(testEmployee, new PrivateType(typeof(HourlyEmployee)));
+
+            decimal actual = (decimal)target.GetField("rateOfPay");
+
+            Assert.AreEqual(rateOfPay, actual);
+        }
+
+
         #region Helper Methods
 
         /// <summary>
